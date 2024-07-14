@@ -19,8 +19,8 @@ public class Launcher extends Application {
     private static Stage primaryStage;
     private static FlowPane mainPane;
     private static TopPane topPane;
-    //private static CurrencyPane currencyPane;
     private static CurrencyParentPane currencyParentPane;
+    private static String baseCurrency = "THB"; // Default base currency
 
     public static List<Currency> getCurrencyList() {
         return currencyList;
@@ -30,7 +30,6 @@ public class Launcher extends Application {
         Launcher.currencyList = currencyList;
     }
 
-    //private static Currency currency;
     private static List<Currency> currencyList;
 
     @Override
@@ -65,6 +64,45 @@ public class Launcher extends Application {
         //currencyPane.refreshPane(currency);
         currencyParentPane.refreshPane(currencyList);
         primaryStage.sizeToScene();
+    }
+    public static CurrencyParentPane getCurrencyParentPane() {
+        return currencyParentPane;
+    }
+
+    public static void setCurrencyParentPane(CurrencyParentPane currencyParentPane) {
+        Launcher.currencyParentPane = currencyParentPane;
+    }
+
+    public static TopPane getTopPane() {
+        return topPane;
+    }
+
+    public static void setTopPane(TopPane topPane) {
+        Launcher.topPane = topPane;
+    }
+
+    public static FlowPane getMainPane() {
+        return mainPane;
+    }
+
+    public static void setMainPane(FlowPane mainPane) {
+        Launcher.mainPane = mainPane;
+    }
+
+    public static Stage getPrimaryStage() {
+        return primaryStage;
+    }
+
+    public static void setPrimaryStage(Stage primaryStage) {
+        Launcher.primaryStage = primaryStage;
+    }
+
+    public static String getBaseCurrency() {
+        return baseCurrency;
+    }
+
+    public static void setBaseCurrency(String baseCurrency) {
+        Launcher.baseCurrency = baseCurrency;
     }
 
 }

@@ -3,6 +3,7 @@ package se233.chapter2.model;
 import java.util.List;
 
 public class Currency {
+    private List<CurrencyEntity> historicalData;
     private String shortCode;
     private CurrencyEntity current;
     private List<CurrencyEntity> historical;
@@ -53,5 +54,11 @@ public class Currency {
         this.shortCode = shortCode;
         this.isWatch = false;
         this.watchRate = 0.0;
+    }
+    public Currency(String shortCode, List<CurrencyEntity> historicalData) {
+        this.shortCode = shortCode;
+        this.isWatch = false;
+        this.watchRate = 0.0;
+        this.historicalData = historicalData;
     }
 }

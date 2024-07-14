@@ -14,62 +14,77 @@ import se233.chapter2.controller.AllEventHandlers;
 import se233.chapter2.controller.DrawGraphTask;
 import se233.chapter2.model.Currency;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 
 public class CurrencyPane extends BorderPane {
     private Currency currency;
     private Button watch;
     private Button delete;
-    public CurrencyPane(Currency currency) throws ExecutionException, InterruptedException {
+    private Button unwatch;
+
+    public CurrencyPane(Currency currency) {
         this.watch = new Button("Watch");
+        this.unwatch = new Button("Unwatch");
         this.delete = new Button("Delete");
-        this.watch.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                try {
-                    AllEventHandlers.onWatch(currency.getShortCode());
-                } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+        this.watch.setOnAction(event -> {
+            try {
+                AllEventHandlers.onWatch(currency.getShortCode());
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
         });
-        this.delete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                try {
-                    AllEventHandlers.onDelete(currency.getShortCode());
-                } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+        this.unwatch.setOnAction(event -> {
+            try {
+                AllEventHandlers.onUnwatch(currency.getShortCode());
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        this.delete.setOnAction(event -> {
+            try {
+                AllEventHandlers.onDelete(currency.getShortCode());
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
         });
         this.setPadding(new Insets(0));
-        this.setPrefSize(640,300);
+        this.setPrefSize(640, 300);
         this.setStyle("-fx-background-color: black;");
         this.refreshPane(currency);
-        // p . 101 try catch is not working here 2.41
-    }
-    public void refreshPane(Currency currency) throws ExecutionException, InterruptedException {
-          this.currency = currency;
-          Pane currencyInfo = genInfoPane();
-          FutureTask<VBox> futureTask = new FutureTask<>(new DrawGraphTask(currency));
-          ExecutorService executor = Executors.newSingleThreadExecutor();
-          executor.execute(futureTask);
-          VBox currencyGraph = futureTask.get();
-          Pane topArea = genTopArea();
-          this.setTop(topArea);
-          this.setLeft(currencyInfo);
-          this.setCenter(currencyGraph);
     }
 
-    private Pane genInfoPane() {
+    public void refreshPane(Currency currency) {
+        this.currency = currency;
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        Future<Pane> currencyInfoFuture = executor.submit(new CurrencyInfoTask(currency));
+        Future<Pane> currencyTopAreaFuture = executor.submit(new CurrencyTopAreaTask(currency, watch, unwatch, delete));
+
+        try {
+            Pane currencyInfo = currencyInfoFuture.get();
+            Pane currencyTopArea = currencyTopAreaFuture.get();
+            FutureTask<VBox> futureTask = new FutureTask<>(new DrawGraphTask(currency));
+            executor.execute(futureTask);
+            VBox currencyGraph = futureTask.get();
+            this.setTop(currencyTopArea);
+            this.setLeft(currencyInfo);
+            this.setCenter(currencyGraph);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        } finally {
+            executor.shutdown();
+        }
+    }
+}
+
+class CurrencyInfoTask implements Callable<Pane> {
+    private final Currency currency;
+
+    public CurrencyInfoTask(Currency currency) {
+        this.currency = currency;
+    }
+
+    @Override
+    public Pane call() {
         VBox currencyInfoPane = new VBox(10);
         currencyInfoPane.setPadding(new Insets(5, 25, 5, 25));
         currencyInfoPane.setAlignment(Pos.CENTER);
@@ -90,16 +105,27 @@ public class CurrencyPane extends BorderPane {
         currencyInfoPane.getChildren().addAll(exchangeString, watchString);
         return currencyInfoPane;
     }
+}
 
-    private HBox genTopArea() {
+class CurrencyTopAreaTask implements Callable<Pane> {
+    private final Currency currency;
+    private final Button watch;
+    private final Button unwatch;
+    private final Button delete;
+
+    public CurrencyTopAreaTask(Currency currency, Button watch, Button unwatch, Button delete) {
+        this.currency = currency;
+        this.watch = watch;
+        this.unwatch = unwatch;
+        this.delete = delete;
+    }
+
+    @Override
+    public Pane call() {
         HBox topArea = new HBox(10);
         topArea.setPadding(new Insets(5));
-        topArea.getChildren().addAll(watch, delete);
+        topArea.getChildren().addAll(watch, unwatch, delete);
         topArea.setAlignment(Pos.CENTER_RIGHT);
         return topArea;
     }
-
-
-
-
 }
