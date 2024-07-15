@@ -11,13 +11,27 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 public class AllEventHandlers {
-    public static void onRefresh(){
-        try{
-            Launcher.refreshPane();
-        }catch(Exception e){
-            e.printStackTrace();
+//    public static void onRefresh(){
+//        try{
+//            Launcher.refreshPane();
+//        }catch(Exception e){
+//            e.printStackTrace();
+//        }
+//    }
+public static void onRefresh() {
+    try {
+        List<Currency> currencyList = Launcher.getCurrencyList();
+        for (Currency currency : currencyList) {
+            List<CurrencyEntity> cList = FetchData.fetchRange(currency.getShortCode(), 30);
+            currency.setHistorical(cList);
+            currency.setCurrent(cList.get(cList.size() - 1));
         }
+        Launcher.setCurrencyList(currencyList);
+        Launcher.refreshPane();
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+}
 
     public static void onAdd() {
         boolean validInput = false;
